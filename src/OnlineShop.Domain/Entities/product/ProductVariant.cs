@@ -15,10 +15,10 @@ namespace OnlineShop.Domain.Entities.product
         public int Stock { get; set; }
         public Product product { get; set; }
         public long ProductId { get; set; }
-        public ICollection<Specification> Specification { get; set; }
-        = new List<Specification>();
+        public ICollection<VariantSpecificationValue> SpecificationValues { get; set; }
+        = new List<VariantSpecificationValue>();
 
-        public ICollection<ProductImage> ProductImages { get; set; }
+        public ICollection<ProductImage> Images { get; set; }
         = new List<ProductImage>();
     }
 }
