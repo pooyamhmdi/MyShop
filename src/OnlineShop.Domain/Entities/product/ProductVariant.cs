@@ -13,7 +13,6 @@ namespace OnlineShop.Domain.Entities.product
         public long ProductId { get; set; }
         public ICollection<VariantSpecificationValue> SpecificationValues { get; set; }
         = new List<VariantSpecificationValue>();
-
         public ICollection<ProductImage> Images { get; set; }
         = new List<ProductImage>();
     }
