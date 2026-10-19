@@ -1,4 +1,12 @@
+using Microsoft.EntityFrameworkCore;
+using OnlineShop.Infrastracture.Persistence;
 var builder = WebApplication.CreateBuilder(args);
+
+//با این کار، ASP.NET Core می‌فهمه که برای OnlineShopDbContext از SQL Server استفاده کنه.
+builder.Services.AddDbContext<OnlineShopDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
@@ -32,7 +40,16 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
+app.MapGet("/api/products", () =>
+{
+    var products = new[]
+    {
+        new { Id = 1, Name = "Laptop", Price = 50000000 },
+        new { Id = 2, Name = "Mouse", Price = 800000 }
+    };
 
+    return Results.Ok(products);
+});
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
