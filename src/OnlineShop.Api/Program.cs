@@ -40,13 +40,17 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
-app.MapGet("/api/products", () =>
+app.MapGet("/api/products", async (OnlineShopDbContext dbContext) =>
 {
-    var products = new[]
-    {
-        new { Id = 1, Name = "Laptop", Price = 50000000 },
-        new { Id = 2, Name = "Mouse", Price = 800000 }
-    };
+    var products = await dbContext.Products
+        .Select(p => new
+        {
+            p.Id,
+            p.Name,
+            p.Description,
+            p.BrandId
+        })
+        .ToListAsync();
 
     return Results.Ok(products);
 });
