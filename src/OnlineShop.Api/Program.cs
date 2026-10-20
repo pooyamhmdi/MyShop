@@ -40,6 +40,7 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
+
 app.MapGet("/api/products", async (OnlineShopDbContext dbContext) =>
 {
     var products = await dbContext.Products
@@ -48,12 +49,21 @@ app.MapGet("/api/products", async (OnlineShopDbContext dbContext) =>
             p.Id,
             p.Name,
             p.Description,
-            p.BrandId
+            p.BrandId,
+
+            Variants = p.Variants.Select(v => new
+            {
+                v.Id,
+                v.SKU,
+                v.Price,
+                v.Stock
+            })
         })
         .ToListAsync();
 
     return Results.Ok(products);
 });
+
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
