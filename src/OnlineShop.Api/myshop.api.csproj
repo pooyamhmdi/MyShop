@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\OnlineShop.Infrastracture\myshop.Infrastracture.csproj" />
+    <ProjectReference Include="..\OnlineShop.Application\OnlineShop.Application.csproj" />
   </ItemGroup>
 
 </Project>

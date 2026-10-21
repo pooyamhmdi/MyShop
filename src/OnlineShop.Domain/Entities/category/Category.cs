@@ -1,14 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using OnlineShop.Domain.Common;
 using OnlineShop.Domain.Entities.product;
 
 namespace OnlineShop.Domain.Entities.category
 {
-    public class Category
+    public class Category:BaseEntity
     {
-        public long Id  { get; set; }
         public string Name { get; set; } = string.Empty;
         public Category? ParentCategory{get; set;}
         public long? ParentCategoryId{get; set;}
