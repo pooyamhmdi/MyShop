@@ -1,26 +1,27 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using OnlineShop.Domain.Common;
 using OnlineShop.Domain.Entities.category;
 
 namespace OnlineShop.Domain.Entities.specification
 {
-    public enum SpicificationType
+    public enum SpecificationType
     {
         Text,
         Number,
         Boolean,
         Select
     }
-    public class Specification
+
+    public class Specification : BaseEntity
     {
-        public long Id { get; set; }
         public string Name { get; set; } = string.Empty;
-        public SpicificationType Type { get; set; }
-        public Category Category { get; set; }
+
+        public SpecificationType Type { get; set; }
+
+        public Category Category { get; set; } = null!;
+
         public long CategoryId { get; set; }
-        public ICollection<SpecificationOption> Options {get;set;}
-        = new List<SpecificationOption>();
+
+        public ICollection<SpecificationOption> Options { get; set; }
+            = new List<SpecificationOption>();
     }
 }
