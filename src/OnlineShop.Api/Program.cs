@@ -1,11 +1,13 @@
-using Microsoft.EntityFrameworkCore;
-using OnlineShop.Infrastracture.Persistence;
+using OnlineShop.Application;
+using OnlineShop.Infrastracture;
+
 var builder = WebApplication.CreateBuilder(args);
 
-//با این کار، ASP.NET Core می‌فهمه که برای OnlineShopDbContext از SQL Server استفاده کنه.
-builder.Services.AddDbContext<OnlineShopDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddApplication();
+
+builder.Services.AddInfrastructure(
+    builder.Configuration);
 
 
 // Add services to the container.
