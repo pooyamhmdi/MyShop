@@ -1,6 +1,6 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using OnlineShop.Infrastracture.Persistence;
+using OnlineShop.Application.Features.Products.Queries;
 
 namespace OnlineShop.Api.Controllers;
 
@@ -8,34 +8,23 @@ namespace OnlineShop.Api.Controllers;
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
 {
-    private readonly OnlineShopDbContext _dbContext;
+    private readonly ISender _sender;
 
-    public ProductsController(OnlineShopDbContext dbContext)
+    public ProductsController(ISender sender)
     {
-        _dbContext = dbContext;
+        _sender = sender;
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetProducts()
+    public async Task<IActionResult> GetProducts(
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
     {
-        var products = await _dbContext.Products
-            .Select(p => new
-            {
-                p.Id,
-                p.Name,
-                p.Description,
-                p.BrandId,
+        var query = new GetProductsQuery(pageNumber, pageSize);
 
-                Variants = p.Variants.Select(v => new
-                {
-                    v.Id,
-                    v.SKU,
-                    v.Price,
-                    v.Stock
-                })
-            })
-            .ToListAsync();
+        var result = await _sender.Send(query, cancellationToken);
 
-        return Ok(products);
+        return Ok(result);
     }
 }
