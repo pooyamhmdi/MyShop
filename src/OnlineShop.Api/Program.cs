@@ -1,3 +1,4 @@
+using OnlineShop.Api.Exceptions;
 using OnlineShop.Application;
 using OnlineShop.Infrastracture;
 
@@ -5,6 +6,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 builder.Services.AddApplication();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 builder.Services.AddInfrastructure(
     builder.Configuration);
@@ -18,6 +22,8 @@ builder.Services.AddControllers();
 
 var app = builder.Build();
 
+app.UseExceptionHandler();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -25,8 +31,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-
 
 app.MapControllers();
 
