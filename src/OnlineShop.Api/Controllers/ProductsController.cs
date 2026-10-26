@@ -1,6 +1,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using OnlineShop.Application.Features.Products.Queries;
+using OnlineShop.Application.Features.Products;
+using OnlineShop.Application.Features.Products.Queries.GetProductById;
 
 namespace OnlineShop.Api.Controllers;
 
@@ -27,4 +29,19 @@ public class ProductsController : ControllerBase
 
         return Ok(result);
     }
+
+
+    [HttpGet("{id:long}")]
+    public async Task<ActionResult<ProductDto>> GetProductById(
+        long id,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetProductByIdQuery(id);
+        var product = await _sender.Send(
+            query,
+            cancellationToken);
+
+        return Ok(product);
+    }
+
 }

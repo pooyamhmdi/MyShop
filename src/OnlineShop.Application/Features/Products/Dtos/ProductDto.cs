@@ -1,4 +1,4 @@
-namespace OnlineShop.Application.Features.Products.Dtos;
+namespace OnlineShop.Application.Features.Products;
 
 public record ProductDto(
     long Id,

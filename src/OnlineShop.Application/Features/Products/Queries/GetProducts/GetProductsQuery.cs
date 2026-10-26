@@ -1,4 +1,3 @@
-using OnlineShop.Application.Features.Products.Dtos;
 using MediatR;
 using OnlineShop.Application.Common.Models;
 
