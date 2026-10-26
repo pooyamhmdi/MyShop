@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using OnlineShop.Application.Common.Extensions;
 using OnlineShop.Application.Common.Interfaces;
 using OnlineShop.Application.Common.Models;
-using OnlineShop.Application.Features.Products.Dtos;
 
 namespace OnlineShop.Application.Features.Products.Queries;
 
