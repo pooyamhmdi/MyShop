@@ -1,10 +1,10 @@
+using OnlineShop.Domain.Common;
 using OnlineShop.Domain.Entities.specification;
 
 namespace OnlineShop.Domain.Entities.product
 {
-    public class ProductVariant
+    public class ProductVariant: BaseEntity
     {
-        public long Id { get; set; }
         public string SKU { get; set; } = string.Empty;
         public decimal PurchasePrice { get; set; }
         public decimal Price { get; set; }
