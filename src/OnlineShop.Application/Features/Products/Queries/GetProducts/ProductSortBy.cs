@@ -1,8 +1,8 @@
-namespace OnlineShop.Application.Features.Products.Queries;
+namespace OnlineShop.Application.Features.Products.Queries.GetProducts;
 
 public enum ProductSortBy
 {
     Name,
-    Price,
-    Newest
+    Newest,
+    Oldest
 }

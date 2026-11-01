@@ -39,14 +39,18 @@ namespace OnlineShop.Infrastracture.Persistence
         private void UpdateAuditFields()
         {
             var entries = ChangeTracker.Entries<BaseEntity>()
-            .Where(entry =>
-            entry.State == EntityState.Added ||
-            entry.State == EntityState.Modified);
+                .Where(entry =>
+                    entry.State == EntityState.Added ||
+                    entry.State == EntityState.Modified);
+
             foreach (var entry in entries)
             {
                 if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.CreatedOn = DateTime.UtcNow;
+                    if (entry.Entity.CreatedOn == default)
+                    {
+                        entry.Entity.CreatedOn = DateTime.UtcNow;
+                    }
                 }
                 else if (entry.State == EntityState.Modified)
                 {
@@ -69,6 +73,32 @@ namespace OnlineShop.Infrastracture.Persistence
             modelBuilder.Entity<ProductVariant>()
             .Property(pv => pv.PurchasePrice)
             .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Category>()
+            .HasOne(c => c.ParentCategory)
+            .WithMany(c => c.SubCategories)
+            .HasForeignKey(c => c.ParentCategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            ApplyQueryFilter(modelBuilder);
+        }
+
+        private void ApplyQueryFilter(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Category>()
+                .HasQueryFilter(p => !p.IsDeleted);
+
+            modelBuilder.Entity<Product>()
+                .HasQueryFilter(p => !p.IsDeleted);
+
+            modelBuilder.Entity<ProductVariant>()
+                .HasQueryFilter(p => !p.IsDeleted);
+
+            modelBuilder.Entity<Brand>()
+                .HasQueryFilter(p => !p.IsDeleted);
+
+            modelBuilder.Entity<Specification>()
+                .HasQueryFilter(p => !p.IsDeleted);
         }
     }
 }
