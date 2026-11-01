@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using OnlineShop.Application.Features.Products.Queries;
+using OnlineShop.Application.Features.Products.Queries.GetProducts;
 using OnlineShop.Application.Features.Products;
 using OnlineShop.Application.Features.Products.Queries.GetProductById;
 

@@ -3,11 +3,10 @@ using Microsoft.EntityFrameworkCore;
 using OnlineShop.Application.Common.Interfaces;
 using OnlineShop.Application.Common.Models;
 using OnlineShop.Application.Common.Extensions;
-using OnlineShop.Application.Features.Products;
-using OnlineShop.Application.Features.Products.Queries;
 using OnlineShop.Domain.Entities.product;
+using OnlineShop.Application.Features.Products.Dtos;
 
-namespace OnlineShop.Application.Features.Products.Queries;
+namespace OnlineShop.Application.Features.Products.Queries.GetProducts;
 
 public class GetProductsQueryHandler
     : IRequestHandler<GetProductsQuery, PagedResult<ProductDto>>
@@ -26,22 +25,53 @@ public class GetProductsQueryHandler
         var query = _context.Products.AsNoTracking();
 
         query = ApplySearchFilter(query, request.Filter?.SearchTerm);
+
         query = ApplyBrandFilter(query, request.Filter?.BrandId);
-        query = ApplyCategoryFilter(query, request.Filter?.CategoryId);
-        query = ApplySorting(query, request.Filter);
+
+        query = await ApplyCategoryFilter(query, request.Filter?.CategoryId, cancellationToken);
+
+        query = ApplyProductSorting(query, request.Filter?.SortBy);
 
         var products = query.Select(p => new ProductDto(
             p.Id,
             p.Name,
             p.Description,
             p.BrandId,
-            p.Variants.Select(v => new ProductVariantDto(
-                v.Id,
-                v.SKU,
-                v.Price,
-                v.Stock
-            )).ToList()
-        ));
+
+            p.Images
+                .OrderByDescending(i => i.IsMain)
+                .ThenBy(i => i.DisplayOrder)
+                .ThenBy(i => i.Id)
+                .Select(i => new ProductImageDto(
+                    i.Id,
+                    i.ImageUrl,
+                    i.IsMain,
+                    i.DisplayOrder
+                ))
+                .ToList(),
+
+            p.Variants
+                .OrderBy(v => v.Id)
+                .Select(v => new ProductVariantDto(
+                    v.Id,
+                    v.SKU,
+                    v.Price,
+                    v.Stock,
+
+                    v.Images
+                        .OrderByDescending(i => i.IsMain)
+                        .ThenBy(i => i.DisplayOrder)
+                        .ThenBy(i => i.Id)
+                        .Select(i => new ProductImageDto(
+                            i.Id,
+                            i.ImageUrl,
+                            i.IsMain,
+                            i.DisplayOrder
+                        ))
+                        .ToList()
+                ))
+                .ToList()
+        )); ;
 
         return await products.PaginateAsync(
             request.PageNumber,
@@ -71,74 +101,76 @@ public class GetProductsQueryHandler
     {
         if (brandId.HasValue)
         {
-            query = query.Where(p => p.BrandId == brandId.Value);
-        }
-
-        return query;
-    }
-
-    private IQueryable<Product> ApplyCategoryFilter(
-        IQueryable<Product> query,
-        long? categoryId)
-    {
-        if (categoryId.HasValue)
-        {
             query = query.Where(p =>
-                p.Categories.Any(c => c.CategoryId == categoryId.Value));
+                p.BrandId == brandId.Value);
         }
 
         return query;
     }
 
-    private IQueryable<Product> ApplySorting(
+    private async Task<IQueryable<Product>> ApplyCategoryFilter(
         IQueryable<Product> query,
-        ProductFilter? filter)
+        long? categoryId,
+        CancellationToken cancellationToken)
     {
-        if (filter is null || filter.SortBy is null)
+        if (!categoryId.HasValue)
+            return query;
+
+        var categoryIds = new List<long>
         {
-            return query.OrderBy(p => p.Id);
+            categoryId.Value
+        };
+
+        var currentLevelIds = new List<long>
+        {
+            categoryId.Value
+        };
+
+        // چهار سطح فرزند به‌علاوه دسته اصلی
+        for (int i = 0; i < 4; i++)
+        {
+            var childIds = await _context.Categories
+                .AsNoTracking()
+                .Where(c =>
+                    c.ParentCategoryId.HasValue &&
+                    currentLevelIds.Contains(c.ParentCategoryId.Value))
+                .Select(c => c.Id)
+                .ToListAsync(cancellationToken);
+
+            if (childIds.Count == 0)
+                break;
+
+            categoryIds.AddRange(childIds);
+
+            currentLevelIds = childIds;
         }
 
-        switch (filter.SortBy.Value)
+        return query.Where(p =>
+            p.Categories.Any(c =>
+                categoryIds.Contains(c.CategoryId)));
+    }
+
+    private IQueryable<Product> ApplyProductSorting(
+        IQueryable<Product> query,
+        ProductSortBy? sortBy)
+    {
+        return sortBy switch
         {
-            case ProductSortBy.Name:
-                query = filter.SortDescending
-                    ? query.OrderByDescending(p => p.Name).ThenBy(p => p.Id)
-                    : query.OrderBy(p => p.Name).ThenBy(p => p.Id);
-                break;
+            ProductSortBy.Name =>
+                query.OrderBy(p => p.Name)
+                     .ThenBy(p => p.Id),
 
-            case ProductSortBy.Newest:
-                query = filter.SortDescending
-                    ? query.OrderByDescending(p => p.CreatedOn).ThenBy(p => p.Id)
-                    : query.OrderBy(p => p.CreatedOn).ThenBy(p => p.Id);
-                break;
+            ProductSortBy.Newest =>
+                query.OrderByDescending(p => p.CreatedOn)
+                     .ThenBy(p => p.Id),
 
-            case ProductSortBy.Price:
-                query = query.OrderBy(p => p.Variants.Any() ? 0 : 1);
+            ProductSortBy.Oldest =>
+                query.OrderBy(p => p.CreatedOn)
+                     .ThenBy(p => p.Id),
 
-                if (filter.SortDescending)
-                {
-                    query = ((IOrderedQueryable<Product>)query)
-                        .ThenByDescending(
-                            p => p.Variants.Min(v => (decimal?)v.Price));
-                }
-                else
-                {
-                    query = ((IOrderedQueryable<Product>)query)
-                        .ThenBy(
-                            p => p.Variants.Min(v => (decimal?)v.Price));
-                }
-
-                query = ((IOrderedQueryable<Product>)query)
-                    .ThenBy(p => p.Id);
-                break;
-
-            default:
-                query = query.OrderBy(p => p.Id);
-                break;
-        }
-
-        return query;
+            _ =>
+                query.OrderBy(p => p.Id)
+        };
     }
 }
 
