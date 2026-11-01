@@ -73,6 +73,32 @@ namespace OnlineShop.Infrastracture.Persistence
             modelBuilder.Entity<ProductVariant>()
             .Property(pv => pv.PurchasePrice)
             .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Category>()
+            .HasOne(c => c.ParentCategory)
+            .WithMany(c => c.SubCategories)
+            .HasForeignKey(c => c.ParentCategoryId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            ApplyQueryFilter(modelBuilder);
+        }
+
+        private void ApplyQueryFilter(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Category>()
+                .HasQueryFilter(p => !p.IsDeleted);
+
+            modelBuilder.Entity<Product>()
+                .HasQueryFilter(p => !p.IsDeleted);
+
+            modelBuilder.Entity<ProductVariant>()
+                .HasQueryFilter(p => !p.IsDeleted);
+
+            modelBuilder.Entity<Brand>()
+                .HasQueryFilter(p => !p.IsDeleted);
+
+            modelBuilder.Entity<Specification>()
+                .HasQueryFilter(p => !p.IsDeleted);
         }
     }
 }
