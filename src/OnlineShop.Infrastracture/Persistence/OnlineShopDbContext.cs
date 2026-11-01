@@ -39,14 +39,18 @@ namespace OnlineShop.Infrastracture.Persistence
         private void UpdateAuditFields()
         {
             var entries = ChangeTracker.Entries<BaseEntity>()
-            .Where(entry =>
-            entry.State == EntityState.Added ||
-            entry.State == EntityState.Modified);
+                .Where(entry =>
+                    entry.State == EntityState.Added ||
+                    entry.State == EntityState.Modified);
+
             foreach (var entry in entries)
             {
                 if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.CreatedOn = DateTime.UtcNow;
+                    if (entry.Entity.CreatedOn == default)
+                    {
+                        entry.Entity.CreatedOn = DateTime.UtcNow;
+                    }
                 }
                 else if (entry.State == EntityState.Modified)
                 {
