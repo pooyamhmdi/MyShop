@@ -99,6 +99,9 @@ namespace OnlineShop.Infrastracture.Persistence
 
             modelBuilder.Entity<Specification>()
                 .HasQueryFilter(p => !p.IsDeleted);
+
+            modelBuilder.Entity<ProductImage>()
+                .HasQueryFilter(i => !i.IsDeleted);
         }
     }
 }

@@ -25,10 +25,12 @@ public class GetProductsQueryHandler
         var query = _context.Products.AsNoTracking();
 
         query = ApplySearchFilter(query, request.Filter?.SearchTerm);
-
         query = ApplyBrandFilter(query, request.Filter?.BrandId);
 
-        query = await ApplyCategoryFilter(query, request.Filter?.CategoryId, cancellationToken);
+        query = await ApplyCategoryFilter(
+            query,
+            request.Filter?.CategoryId,
+            cancellationToken);
 
         query = ApplyProductSorting(query, request.Filter?.SortBy);
 
@@ -54,10 +56,11 @@ public class GetProductsQueryHandler
                 .OrderBy(v => v.Id)
                 .Select(v => new ProductVariantDto(
                     v.Id,
+                    v.ProductId,
+                    p.Name,
                     v.SKU,
                     v.Price,
                     v.Stock,
-
                     v.Images
                         .OrderByDescending(i => i.IsMain)
                         .ThenBy(i => i.DisplayOrder)
@@ -71,7 +74,7 @@ public class GetProductsQueryHandler
                         .ToList()
                 ))
                 .ToList()
-        )); ;
+        ));
 
         return await products.PaginateAsync(
             request.PageNumber,
@@ -101,8 +104,7 @@ public class GetProductsQueryHandler
     {
         if (brandId.HasValue)
         {
-            query = query.Where(p =>
-                p.BrandId == brandId.Value);
+            query = query.Where(p => p.BrandId == brandId.Value);
         }
 
         return query;
@@ -116,17 +118,9 @@ public class GetProductsQueryHandler
         if (!categoryId.HasValue)
             return query;
 
-        var categoryIds = new List<long>
-        {
-            categoryId.Value
-        };
+        var categoryIds = new List<long> { categoryId.Value };
+        var currentLevelIds = new List<long> { categoryId.Value };
 
-        var currentLevelIds = new List<long>
-        {
-            categoryId.Value
-        };
-
-        // چهار سطح فرزند به‌علاوه دسته اصلی
         for (int i = 0; i < 4; i++)
         {
             var childIds = await _context.Categories
@@ -141,13 +135,11 @@ public class GetProductsQueryHandler
                 break;
 
             categoryIds.AddRange(childIds);
-
             currentLevelIds = childIds;
         }
 
         return query.Where(p =>
-            p.Categories.Any(c =>
-                categoryIds.Contains(c.CategoryId)));
+            p.Categories.Any(c => categoryIds.Contains(c.CategoryId)));
     }
 
     private IQueryable<Product> ApplyProductSorting(
@@ -157,19 +149,15 @@ public class GetProductsQueryHandler
         return sortBy switch
         {
             ProductSortBy.Name =>
-                query.OrderBy(p => p.Name)
-                     .ThenBy(p => p.Id),
+                query.OrderBy(p => p.Name).ThenBy(p => p.Id),
 
             ProductSortBy.Newest =>
-                query.OrderByDescending(p => p.CreatedOn)
-                     .ThenBy(p => p.Id),
+                query.OrderByDescending(p => p.CreatedOn).ThenBy(p => p.Id),
 
             ProductSortBy.Oldest =>
-                query.OrderBy(p => p.CreatedOn)
-                     .ThenBy(p => p.Id),
+                query.OrderBy(p => p.CreatedOn).ThenBy(p => p.Id),
 
-            _ =>
-                query.OrderBy(p => p.Id)
+            _ => query.OrderBy(p => p.Id)
         };
     }
 }

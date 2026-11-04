@@ -46,6 +46,8 @@ public class GetProductByIdQueryHandler
                     .OrderBy(v => v.Id)
                     .Select(v => new ProductVariantDto(
                         v.Id,
+                        v.ProductId,
+                        v.Product.Name,
                         v.SKU,
                         v.Price,
                         v.Stock,

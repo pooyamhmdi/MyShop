@@ -1,8 +1,10 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using OnlineShop.Application.Features.Products.Queries.GetProducts;
-using OnlineShop.Application.Features.Products;
+using OnlineShop.Application.Features.Products.Dtos;
+using OnlineShop.Application.Features.Products.Queries.GetProductVariants;
 using OnlineShop.Application.Features.Products.Queries.GetProductById;
+using OnlineShop.Api.Controllers.Requests;
 
 namespace OnlineShop.Api.Controllers;
 
@@ -29,8 +31,26 @@ public class ProductsController : ControllerBase
 
         return Ok(result);
     }
+    [HttpGet("variants")]
+    public async Task<IActionResult> GetProductVariants(
+        [FromQuery] GetProductVariantsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var filter = new ProductVariantFilter(
+            request.SearchTerm,
+            request.BrandId,
+            request.CategoryId,
+            request.SortBy);
+        var query = new GetProductVariantsQuery(
+            request.PageNumber,
+            request.PageSize,
+            filter);
+        var result = await _sender.Send(
+            query,
+            cancellationToken);
 
-
+        return Ok(result);
+    }
     [HttpGet("{id:long}")]
     public async Task<ActionResult<ProductDto>> GetProductById(
         long id,
