@@ -5,6 +5,7 @@ using OnlineShop.Application.Features.Products.Dtos;
 using OnlineShop.Application.Features.Products.Queries.GetProductVariants;
 using OnlineShop.Application.Features.Products.Queries.GetProductById;
 using OnlineShop.Api.Controllers.Requests;
+using OnlineShop.Application.Features.Products.Queries.GetProductVariantById;
 
 namespace OnlineShop.Api.Controllers;
 
@@ -51,17 +52,16 @@ public class ProductsController : ControllerBase
 
         return Ok(result);
     }
-    [HttpGet("{id:long}")]
-    public async Task<ActionResult<ProductDto>> GetProductById(
+    [HttpGet("variants/{id:long}")]
+    public async Task<IActionResult> GetProductVariantById(
         long id,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken = default)
     {
-        var query = new GetProductByIdQuery(id);
-        var product = await _sender.Send(
-            query,
-            cancellationToken);
+        var query = new GetProductVariantByIdQuery(id);
 
-        return Ok(product);
+        var result = await _sender.Send(query, cancellationToken);
+
+        return Ok(result);
     }
 
 }
